@@ -1,0 +1,552 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_NutriExpress" targetNamespace="https://nutriexpress.example/tpi" exporter="NutriExpress TPI" exporterVersion="1.0">
+  <bpmn:error id="ErrStock" name="Stock insuficiente" errorCode="STOCK_INSUFICIENTE"/>
+  <bpmn:error id="ErrRegistro" name="Fallo técnico de registro" errorCode="ERROR_REGISTRO"/>
+  <bpmn:process id="ProcesoProduccion" name="Planificación y confirmación de producción" isExecutable="false">
+    <bpmn:laneSet id="ProcesoProduccion_lanes">
+      <bpmn:lane id="ProcesoProduccion_lane0" name="Ventas">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Seleccionar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Acordar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Actualizar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>FinAlternativo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="ProcesoProduccion_lane1" name="Sistema">
+        <bpmn:flowNodeRef>Calcular</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Stock</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Registrar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Alertas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>FinProduccion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>StockCambio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ErrorRegistro</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Resolver</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="ProcesoProduccion_lane2" name="Compras y Depósito">
+        <bpmn:flowNodeRef>Abastecer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Abastecido</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="ProcesoProduccion_lane3" name="Cocina y Producción">
+        <bpmn:flowNodeRef>Confirmar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Elaborar</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Planificación diaria">
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Seleccionar" name="Seleccionar pedidos confirmados">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Calcular" name="Calcular requerimientos y stock utilizable">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:incoming>F11</bpmn:incoming>
+    <bpmn:outgoing>F3</bpmn:outgoing>
+      </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Stock" name="¿Stock suficiente?">
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Confirmar" name="Revisar y confirmar producción">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Registrar" name="Validar y registrar consumo atómico">
+      <bpmn:incoming>F6</bpmn:incoming>
+      <bpmn:incoming>F17</bpmn:incoming>
+    <bpmn:outgoing>F7</bpmn:outgoing>
+      </bpmn:serviceTask>
+    <bpmn:userTask id="Elaborar" name="Elaborar viandas">
+      <bpmn:incoming>F7</bpmn:incoming>
+      <bpmn:outgoing>F8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Alertas" name="Actualizar existencias y alertas">
+      <bpmn:incoming>F8</bpmn:incoming>
+      <bpmn:outgoing>F9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="FinProduccion" name="Producción registrada">
+      <bpmn:incoming>F9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="Abastecer" name="Gestionar faltante" calledElement="ProcesoAbastecimiento">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:incoming>F15</bpmn:incoming>
+    <bpmn:outgoing>F10</bpmn:outgoing>
+      </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Abastecido" name="¿Abastecido?">
+      <bpmn:incoming>F10</bpmn:incoming>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+      <bpmn:outgoing>F12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Acordar" name="Acordar reprogramación o cancelación">
+      <bpmn:incoming>F12</bpmn:incoming>
+      <bpmn:outgoing>F13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Actualizar" name="Actualizar estado y fecha del pedido">
+      <bpmn:incoming>F13</bpmn:incoming>
+      <bpmn:outgoing>F14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="FinAlternativo" name="Planificación reprogramada o cancelada">
+      <bpmn:incoming>F14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="StockCambio" name="Stock cambió" attachedToRef="Registrar" cancelActivity="true">
+      <bpmn:outgoing>F15</bpmn:outgoing>
+    <bpmn:errorEventDefinition id="StockCambio_def" errorRef="ErrStock"/>
+      </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="ErrorRegistro" name="Fallo técnico" attachedToRef="Registrar" cancelActivity="true">
+      <bpmn:outgoing>F16</bpmn:outgoing>
+    <bpmn:errorEventDefinition id="ErrorRegistro_def" errorRef="ErrRegistro"/>
+      </bpmn:boundaryEvent>
+    <bpmn:userTask id="Resolver" name="Resolver incidente y autorizar reintento">
+      <bpmn:incoming>F16</bpmn:incoming>
+      <bpmn:outgoing>F17</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="F1" sourceRef="Inicio" targetRef="Seleccionar" name=""/>
+    <bpmn:sequenceFlow id="F2" sourceRef="Seleccionar" targetRef="Calcular" name=""/>
+    <bpmn:sequenceFlow id="F3" sourceRef="Calcular" targetRef="Stock" name=""/>
+    <bpmn:sequenceFlow id="F4" sourceRef="Stock" targetRef="Confirmar" name="Sí"/>
+    <bpmn:sequenceFlow id="F5" sourceRef="Stock" targetRef="Abastecer" name="No"/>
+    <bpmn:sequenceFlow id="F6" sourceRef="Confirmar" targetRef="Registrar" name=""/>
+    <bpmn:sequenceFlow id="F7" sourceRef="Registrar" targetRef="Elaborar" name=""/>
+    <bpmn:sequenceFlow id="F8" sourceRef="Elaborar" targetRef="Alertas" name=""/>
+    <bpmn:sequenceFlow id="F9" sourceRef="Alertas" targetRef="FinProduccion" name=""/>
+    <bpmn:sequenceFlow id="F10" sourceRef="Abastecer" targetRef="Abastecido" name=""/>
+    <bpmn:sequenceFlow id="F11" sourceRef="Abastecido" targetRef="Calcular" name="Sí · recalcular"/>
+    <bpmn:sequenceFlow id="F12" sourceRef="Abastecido" targetRef="Acordar" name="No"/>
+    <bpmn:sequenceFlow id="F13" sourceRef="Acordar" targetRef="Actualizar" name=""/>
+    <bpmn:sequenceFlow id="F14" sourceRef="Actualizar" targetRef="FinAlternativo" name=""/>
+    <bpmn:sequenceFlow id="F15" sourceRef="StockCambio" targetRef="Abastecer" name=""/>
+    <bpmn:sequenceFlow id="F16" sourceRef="ErrorRegistro" targetRef="Resolver" name=""/>
+    <bpmn:sequenceFlow id="F17" sourceRef="Resolver" targetRef="Registrar" name="Reintento seguro"/>
+  </bpmn:process>
+  <bpmn:collaboration id="ProcesoProduccion_coll">
+    <bpmn:participant id="ProcesoProduccion_pool" name="NutriExpress S.R.L." processRef="ProcesoProduccion"/>
+  </bpmn:collaboration>
+  <bpmn:process id="ProcesoAbastecimiento" name="Gestionar faltante de insumos" isExecutable="false">
+    <bpmn:laneSet id="ProcesoAbastecimiento_lanes">
+      <bpmn:lane id="ProcesoAbastecimiento_lane0" name="Compras y Depósito">
+        <bpmn:flowNodeRef>BInicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Solicitar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Respuesta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Viable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Entrega</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Inspeccionar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Conforme</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>NoViable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Rechazar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>BFinNo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="ProcesoAbastecimiento_lane1" name="Sistema">
+        <bpmn:flowNodeRef>BLotes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>BFinSi</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="BInicio" name="Faltante recibido">
+      <bpmn:outgoing>B1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="Solicitar" name="Solicitar disponibilidad y plazo">
+      <bpmn:incoming>B1</bpmn:incoming>
+      <bpmn:outgoing>B2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="Respuesta" name="Recibir disponibilidad y plazo">
+      <bpmn:incoming>B2</bpmn:incoming>
+      <bpmn:outgoing>B3</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:exclusiveGateway id="Viable" name="¿Provisión en plazo?">
+      <bpmn:incoming>B3</bpmn:incoming>
+      <bpmn:outgoing>B4</bpmn:outgoing>
+      <bpmn:outgoing>B5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:receiveTask id="Entrega" name="Recibir insumos del proveedor">
+      <bpmn:incoming>B4</bpmn:incoming>
+      <bpmn:outgoing>B6</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:userTask id="Inspeccionar" name="Verificar cantidad y vencimiento">
+      <bpmn:incoming>B6</bpmn:incoming>
+      <bpmn:outgoing>B7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Conforme" name="¿Recepción conforme?">
+      <bpmn:incoming>B7</bpmn:incoming>
+      <bpmn:outgoing>B8</bpmn:outgoing>
+      <bpmn:outgoing>B9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="BLotes" name="Registrar lotes y movimientos de ingreso">
+      <bpmn:incoming>B8</bpmn:incoming>
+      <bpmn:outgoing>B12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="BFinSi" name="Abastecido">
+      <bpmn:incoming>B12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="NoViable" name="Informar imposibilidad de abastecimiento">
+      <bpmn:incoming>B5</bpmn:incoming>
+      <bpmn:outgoing>B10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Rechazar" name="Rechazar recepción e informar desvío">
+      <bpmn:incoming>B9</bpmn:incoming>
+      <bpmn:outgoing>B11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="BFinNo" name="No abastecido">
+      <bpmn:incoming>B10</bpmn:incoming>
+      <bpmn:incoming>B11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="B1" sourceRef="BInicio" targetRef="Solicitar" name=""/>
+    <bpmn:sequenceFlow id="B2" sourceRef="Solicitar" targetRef="Respuesta" name=""/>
+    <bpmn:sequenceFlow id="B3" sourceRef="Respuesta" targetRef="Viable" name=""/>
+    <bpmn:sequenceFlow id="B4" sourceRef="Viable" targetRef="Entrega" name="Sí"/>
+    <bpmn:sequenceFlow id="B5" sourceRef="Viable" targetRef="NoViable" name="No"/>
+    <bpmn:sequenceFlow id="B6" sourceRef="Entrega" targetRef="Inspeccionar" name=""/>
+    <bpmn:sequenceFlow id="B7" sourceRef="Inspeccionar" targetRef="Conforme" name=""/>
+    <bpmn:sequenceFlow id="B8" sourceRef="Conforme" targetRef="BLotes" name="Sí"/>
+    <bpmn:sequenceFlow id="B9" sourceRef="Conforme" targetRef="Rechazar" name="No"/>
+    <bpmn:sequenceFlow id="B10" sourceRef="NoViable" targetRef="BFinNo" name=""/>
+    <bpmn:sequenceFlow id="B11" sourceRef="Rechazar" targetRef="BFinNo" name=""/>
+    <bpmn:sequenceFlow id="B12" sourceRef="BLotes" targetRef="BFinSi" name=""/>
+  </bpmn:process>
+  <bpmn:collaboration id="ProcesoAbastecimiento_coll">
+    <bpmn:participant id="ProcesoAbastecimiento_pool" name="NutriExpress S.R.L." processRef="ProcesoAbastecimiento"/>
+    <bpmn:participant id="Proveedor" name="Proveedor"/>
+    <bpmn:messageFlow id="M1" name="Solicitud" sourceRef="Solicitar" targetRef="Proveedor"/>
+    <bpmn:messageFlow id="M2" name="Respuesta" sourceRef="Proveedor" targetRef="Respuesta"/>
+    <bpmn:messageFlow id="M3" name="Aviso y entrega" sourceRef="Proveedor" targetRef="Entrega"/>
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="ProcesoProduccion_diagram" name="Planificación y confirmación de producción">
+    <bpmndi:BPMNPlane id="ProcesoProduccion_plane" bpmnElement="ProcesoProduccion_coll">
+      <bpmndi:BPMNShape id="ProcesoProduccion_pool_di" bpmnElement="ProcesoProduccion_pool" isHorizontal="true">
+        <dc:Bounds x="70" y="100" width="1575" height="760"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ProcesoProduccion_lane0_di" bpmnElement="ProcesoProduccion_lane0" isHorizontal="true">
+        <dc:Bounds x="100" y="100" width="1545" height="190"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ProcesoProduccion_lane1_di" bpmnElement="ProcesoProduccion_lane1" isHorizontal="true">
+        <dc:Bounds x="100" y="290" width="1545" height="230"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ProcesoProduccion_lane2_di" bpmnElement="ProcesoProduccion_lane2" isHorizontal="true">
+        <dc:Bounds x="100" y="520" width="1545" height="170"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ProcesoProduccion_lane3_di" bpmnElement="ProcesoProduccion_lane3" isHorizontal="true">
+        <dc:Bounds x="100" y="690" width="1545" height="170"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
+        <dc:Bounds x="145" y="173" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="100" y="215" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Seleccionar_di" bpmnElement="Seleccionar">
+        <dc:Bounds x="205" y="158" width="140" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Calcular_di" bpmnElement="Calcular">
+        <dc:Bounds x="360" y="348" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Stock_di" bpmnElement="Stock">
+        <dc:Bounds x="580" y="356" width="48" height="48"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="535" y="410" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Confirmar_di" bpmnElement="Confirmar">
+        <dc:Bounds x="720" y="738" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Registrar_di" bpmnElement="Registrar">
+        <dc:Bounds x="935" y="348" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Elaborar_di" bpmnElement="Elaborar">
+        <dc:Bounds x="1160" y="738" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Alertas_di" bpmnElement="Alertas">
+        <dc:Bounds x="1400" y="348" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FinProduccion_di" bpmnElement="FinProduccion">
+        <dc:Bounds x="1600" y="362" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1555" y="404" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Abastecer_di" bpmnElement="Abastecer">
+        <dc:Bounds x="560" y="566" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Abastecido_di" bpmnElement="Abastecido">
+        <dc:Bounds x="820" y="574" width="48" height="48"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="775" y="628" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Acordar_di" bpmnElement="Acordar">
+        <dc:Bounds x="1020" y="158" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Actualizar_di" bpmnElement="Actualizar">
+        <dc:Bounds x="1240" y="158" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FinAlternativo_di" bpmnElement="FinAlternativo">
+        <dc:Bounds x="1465" y="172" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1420" y="214" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StockCambio_di" bpmnElement="StockCambio">
+        <dc:Bounds x="952" y="394" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="907" y="436" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ErrorRegistro_di" bpmnElement="ErrorRegistro">
+        <dc:Bounds x="1037" y="394" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="992" y="436" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Resolver_di" bpmnElement="Resolver">
+        <dc:Bounds x="1145" y="442" width="175" height="57"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
+        <di:waypoint x="181" y="191"/>
+        <di:waypoint x="205" y="191"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2">
+        <di:waypoint x="345" y="191"/>
+        <di:waypoint x="352" y="191"/>
+        <di:waypoint x="352" y="380"/>
+        <di:waypoint x="360" y="380"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3">
+        <di:waypoint x="515" y="380"/>
+        <di:waypoint x="580" y="380"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4">
+        <di:waypoint x="628" y="380"/>
+        <di:waypoint x="740" y="380"/>
+        <di:waypoint x="740" y="738"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="648" y="351" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5">
+        <di:waypoint x="604" y="404"/>
+        <di:waypoint x="604" y="566"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="615" y="519" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6">
+        <di:waypoint x="875" y="770"/>
+        <di:waypoint x="904" y="770"/>
+        <di:waypoint x="904" y="380"/>
+        <di:waypoint x="935" y="380"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7">
+        <di:waypoint x="1090" y="380"/>
+        <di:waypoint x="1110" y="380"/>
+        <di:waypoint x="1110" y="770"/>
+        <di:waypoint x="1160" y="770"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8">
+        <di:waypoint x="1315" y="770"/>
+        <di:waypoint x="1365" y="770"/>
+        <di:waypoint x="1365" y="380"/>
+        <di:waypoint x="1400" y="380"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9">
+        <di:waypoint x="1555" y="380"/>
+        <di:waypoint x="1600" y="380"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="715" y="598"/>
+        <di:waypoint x="820" y="598"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="844" y="622"/>
+        <di:waypoint x="844" y="660"/>
+        <di:waypoint x="400" y="660"/>
+        <di:waypoint x="400" y="412"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="455" y="634" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12">
+        <di:waypoint x="844" y="574"/>
+        <di:waypoint x="844" y="270"/>
+        <di:waypoint x="1097" y="270"/>
+        <di:waypoint x="1097" y="222"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="859" y="239" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F13_di" bpmnElement="F13">
+        <di:waypoint x="1175" y="190"/>
+        <di:waypoint x="1240" y="190"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F14_di" bpmnElement="F14">
+        <di:waypoint x="1395" y="190"/>
+        <di:waypoint x="1465" y="190"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F15_di" bpmnElement="F15">
+        <di:waypoint x="970" y="430"/>
+        <di:waypoint x="970" y="538"/>
+        <di:waypoint x="637" y="538"/>
+        <di:waypoint x="637" y="566"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F16_di" bpmnElement="F16">
+        <di:waypoint x="1055" y="430"/>
+        <di:waypoint x="1055" y="470"/>
+        <di:waypoint x="1145" y="470"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F17_di" bpmnElement="F17">
+        <di:waypoint x="1232" y="442"/>
+        <di:waypoint x="1232" y="320"/>
+        <di:waypoint x="1012" y="320"/>
+        <di:waypoint x="1012" y="348"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1092" y="294" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="ProcesoAbastecimiento_diagram" name="Gestionar faltante de insumos">
+    <bpmndi:BPMNPlane id="ProcesoAbastecimiento_plane" bpmnElement="ProcesoAbastecimiento_coll">
+      <bpmndi:BPMNShape id="ProcesoAbastecimiento_pool_di" bpmnElement="ProcesoAbastecimiento_pool" isHorizontal="true">
+        <dc:Bounds x="70" y="100" width="1575" height="540"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ProcesoAbastecimiento_lane0_di" bpmnElement="ProcesoAbastecimiento_lane0" isHorizontal="true">
+        <dc:Bounds x="100" y="100" width="1545" height="360"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ProcesoAbastecimiento_lane1_di" bpmnElement="ProcesoAbastecimiento_lane1" isHorizontal="true">
+        <dc:Bounds x="100" y="460" width="1545" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BInicio_di" bpmnElement="BInicio">
+        <dc:Bounds x="145" y="215" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="100" y="257" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Solicitar_di" bpmnElement="Solicitar">
+        <dc:Bounds x="215" y="200" width="150" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Respuesta_di" bpmnElement="Respuesta">
+        <dc:Bounds x="390" y="200" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Viable_di" bpmnElement="Viable">
+        <dc:Bounds x="600" y="208" width="48" height="48"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="555" y="262" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Entrega_di" bpmnElement="Entrega">
+        <dc:Bounds x="765" y="200" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inspeccionar_di" bpmnElement="Inspeccionar">
+        <dc:Bounds x="980" y="200" width="155" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Conforme_di" bpmnElement="Conforme">
+        <dc:Bounds x="1190" y="208" width="48" height="48"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1145" y="262" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BLotes_di" bpmnElement="BLotes">
+        <dc:Bounds x="1375" y="505" width="170" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BFinSi_di" bpmnElement="BFinSi">
+        <dc:Bounds x="1590" y="519" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1545" y="561" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NoViable_di" bpmnElement="NoViable">
+        <dc:Bounds x="590" y="358" width="175" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Rechazar_di" bpmnElement="Rechazar">
+        <dc:Bounds x="1155" y="358" width="175" height="64"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BFinNo_di" bpmnElement="BFinNo">
+        <dc:Bounds x="870" y="371" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="825" y="413" width="130" height="36"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Proveedor_di" bpmnElement="Proveedor" isHorizontal="true">
+        <dc:Bounds x="70" y="715" width="1575" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="B1_di" bpmnElement="B1">
+        <di:waypoint x="181" y="233"/>
+        <di:waypoint x="215" y="233"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B2_di" bpmnElement="B2">
+        <di:waypoint x="365" y="232"/>
+        <di:waypoint x="390" y="232"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B3_di" bpmnElement="B3">
+        <di:waypoint x="545" y="232"/>
+        <di:waypoint x="600" y="232"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B4_di" bpmnElement="B4">
+        <di:waypoint x="648" y="232"/>
+        <di:waypoint x="765" y="232"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="690" y="203" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B5_di" bpmnElement="B5">
+        <di:waypoint x="624" y="256"/>
+        <di:waypoint x="624" y="358"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="638" y="304" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B6_di" bpmnElement="B6">
+        <di:waypoint x="920" y="232"/>
+        <di:waypoint x="980" y="232"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B7_di" bpmnElement="B7">
+        <di:waypoint x="1135" y="232"/>
+        <di:waypoint x="1190" y="232"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B8_di" bpmnElement="B8">
+        <di:waypoint x="1238" y="232"/>
+        <di:waypoint x="1460" y="232"/>
+        <di:waypoint x="1460" y="505"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1335" y="203" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B9_di" bpmnElement="B9">
+        <di:waypoint x="1214" y="256"/>
+        <di:waypoint x="1214" y="358"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1228" y="304" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B10_di" bpmnElement="B10">
+        <di:waypoint x="765" y="390"/>
+        <di:waypoint x="870" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B11_di" bpmnElement="B11">
+        <di:waypoint x="1155" y="390"/>
+        <di:waypoint x="906" y="390"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B12_di" bpmnElement="B12">
+        <di:waypoint x="1545" y="537"/>
+        <di:waypoint x="1590" y="537"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M1_di" bpmnElement="M1">
+        <di:waypoint x="290" y="264"/>
+        <di:waypoint x="290" y="715"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="300" y="664" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M2_di" bpmnElement="M2">
+        <di:waypoint x="468" y="715"/>
+        <di:waypoint x="468" y="264"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="478" y="664" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="M3_di" bpmnElement="M3">
+        <di:waypoint x="842" y="715"/>
+        <di:waypoint x="842" y="264"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="852" y="664" width="160" height="22"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
